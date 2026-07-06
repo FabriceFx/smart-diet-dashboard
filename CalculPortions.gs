@@ -62,6 +62,7 @@ function onOpen() {
       .addItem('1. Générer le Dashboard interactif', 'creerModeleFeuille')
       .addItem('2. Exporter le Bilan Patient (PDF)', 'exporterPDF')
       .addItem('3. Générer l\'onglet de Suivi Poids', 'creerFeuilleSuivi')
+      .addItem('4. Rafraîchir les listes d\'aliments', 'rafraichirListesAliments')
       .addToUi();
 }
 
@@ -76,6 +77,7 @@ function initialiserBaseAliments(ss) {
   }
   
   sheetDb.getRange("A1:F1").setValues([["Catégorie", "Aliment", "Protéines (g ou %)", "Glucides (g ou %)", "Lipides (g ou %)", "Type"]]).setFontWeight("bold").setBackground("#f3f3f3");
+  sheetDb.getRange("C1:E1").setNote("Pour le type 'g' (pesée), indiquez la fraction (ex: 0.25 = 25%).\nPour 'unite' ou 'fixe', indiquez la valeur brute par portion.");
   
   let rows = [];
   for(let cat in DEFAULT_EQUIVALENCES) {
@@ -201,7 +203,7 @@ function creerModeleFeuille() {
     let rowBackgrounds = ["#ffffff", "#ffffff", "#ffffff"];
     let rowValidations = [null, null, null];
     
-    if (category && equivalences[category]) {
+    if (category && equivalences[category] && Object.keys(equivalences[category]).length > 0) {
       const choix = Object.keys(equivalences[category]);
       const rule = SpreadsheetApp.newDataValidation().requireValueInList(choix, true).build();
       rowValidations[1] = rule;
@@ -209,6 +211,9 @@ function creerModeleFeuille() {
       rowValues[1] = defaultVal;
       rowBackgrounds[1] = "#fff2cc";
       rowValues[2] = "...";
+    } else if (category) {
+      rowValues[1] = typeAliment;
+      rowValues[2] = "⚠️ Catégorie vide";
     } else {
       rowValues[1] = typeAliment;
       rowValues[2] = "Libre";
@@ -229,6 +234,28 @@ function creerModeleFeuille() {
   sheet.setColumnWidth(3, 200);
   
   recalculerMenu();
+}
+
+function rafraichirListesAliments() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Dashboard Diététique");
+  if (!sheet) return;
+  const equivalences = chargerEquivalences();
+  const startRow = getStartRow(sheet);
+  const numRows = Math.max(1, sheet.getLastRow() - startRow + 1);
+  const menuData = sheet.getRange(startRow, 1, numRows, 2).getValues();
+  
+  menuData.forEach((row, i) => {
+    const aliment = row[1];
+    const cat = getCategoryOfAliment(aliment, equivalences);
+    if (cat && equivalences[cat] && Object.keys(equivalences[cat]).length > 0) {
+      const choix = Object.keys(equivalences[cat]);
+      const rule = SpreadsheetApp.newDataValidation().requireValueInList(choix, true).build();
+      sheet.getRange(startRow + i, 2).setDataValidation(rule);
+    } else if (cat) {
+      sheet.getRange(startRow + i, 2).clearDataValidations();
+    }
+  });
+  SpreadsheetApp.getActiveSpreadsheet().toast("Listes d'aliments mises à jour !", "✅ Succès");
 }
 
 /** Utilitaires sécurisés */
@@ -312,12 +339,11 @@ function onEdit(e) {
       e.source.toast("Erreur de calcul : " + err.message, "Alerte Script");
     }
   } else if (sheet.getName() === "Base Aliments") {
-    // Optionnel : recréer les listes déroulantes si la base est modifiée
-    // Mais cela demanderait de re-scanner les aliments existants sur le Dashboard
-    // Pour l'instant, un simple recalcul mettra à jour les calculs avec les nouvelles valeurs !
     try {
       recalculerMenu();
-    } catch(e) {}
+    } catch(err) {
+      e.source.toast("Erreur base aliments : " + err.message, "Alerte Script");
+    }
   }
 }
 
