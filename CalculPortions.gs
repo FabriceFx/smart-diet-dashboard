@@ -20,14 +20,14 @@ const DEFAULT_EQUIVALENCES = {
     "Saumon frais": { prot: 0.20, glu: 0.0, lip: 0.13, type: "g", ref: 100 }
   },
   feculents: {
-    "Pomme de terre": { prot: 0.02, glu: 0.17, lip: 0.0, type: "g", ref: 150 },
+    "Pomme de terre": { prot: 0.02, glu: 0.17, lip: 0.0, type: "g", ref: 100 },
     "Pâtes / Riz (cuits)": { prot: 0.05, glu: 0.30, lip: 0.01, type: "g", ref: 100 },
-    "Semoule (cuite)": { prot: 0.04, glu: 0.28, lip: 0.01, type: "g", ref: 100 },
-    "Légumes secs (cuits)": { prot: 0.08, glu: 0.20, lip: 0.01, type: "g", ref: 100 },
+    "Semoule (cuite)": { prot: 0.04, glu: 0.28, lip: 0.01, type: "g", ref: 60 },
+    "Légumes secs (cuits)": { prot: 0.08, glu: 0.20, lip: 0.01, type: "g", ref: 145 },
     "Pain de mie / céréales": { prot: 0.09, glu: 0.50, lip: 0.04, type: "g", ref: 40 },
     "Purée": { prot: 0.02, glu: 0.15, lip: 0.05, type: "g", ref: 150 },
     "Quinoa / Boulgour (cuits)": { prot: 0.04, glu: 0.21, lip: 0.02, type: "g", ref: 100 },
-    "Patate douce (cuite)": { prot: 0.02, glu: 0.20, lip: 0.0, type: "g", ref: 150 },
+    "Patate douce (cuite)": { prot: 0.02, glu: 0.20, lip: 0.0, type: "g", ref: 80 },
     "Flocons d'avoine": { prot: 0.13, glu: 0.60, lip: 0.07, type: "g", ref: 40 },
     "Pain complet": { prot: 0.09, glu: 0.45, lip: 0.02, type: "g", ref: 40 }
   },
