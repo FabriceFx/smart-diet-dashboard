@@ -8,7 +8,7 @@
  * (ex: glucides dans la viande) sont négligeables dans ce modèle simplifié.
  */
 
-const EQUIVALENCES = {
+const DEFAULT_EQUIVALENCES = {
   viandes: {
     "Viande rouge / blanche (maigre)": { prot: 0.25, glu: 0.0, lip: 0.05, type: "g" },
     "Poisson / Crustacés": { prot: 0.20, glu: 0.0, lip: 0.02, type: "g" },
@@ -65,8 +65,68 @@ function onOpen() {
       .addToUi();
 }
 
+/** Utilitaires de Base de Données d'Aliments */
+
+function initialiserBaseAliments(ss) {
+  let sheetDb = ss.getSheetByName("Base Aliments");
+  if (!sheetDb) {
+    sheetDb = ss.insertSheet("Base Aliments");
+  } else {
+    return sheetDb;
+  }
+  
+  sheetDb.getRange("A1:F1").setValues([["Catégorie", "Aliment", "Protéines (g ou %)", "Glucides (g ou %)", "Lipides (g ou %)", "Type"]]).setFontWeight("bold").setBackground("#f3f3f3");
+  
+  let rows = [];
+  for(let cat in DEFAULT_EQUIVALENCES) {
+    for(let nom in DEFAULT_EQUIVALENCES[cat]) {
+      let item = DEFAULT_EQUIVALENCES[cat][nom];
+      rows.push([cat, nom, item.prot, item.glu, item.lip, item.type]);
+    }
+  }
+  
+  sheetDb.getRange(2, 1, rows.length, 6).setValues(rows);
+  
+  const ruleType = SpreadsheetApp.newDataValidation().requireValueInList(["g", "unite", "fixe"], true).build();
+  sheetDb.getRange(2, 6, 1000, 1).setDataValidation(ruleType);
+  
+  sheetDb.autoResizeColumns(1, 6);
+  return sheetDb;
+}
+
+function chargerEquivalences() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheetDb = ss.getSheetByName("Base Aliments");
+  if (!sheetDb) {
+    sheetDb = initialiserBaseAliments(ss);
+  }
+  
+  const data = sheetDb.getDataRange().getValues();
+  let equivalences = {};
+  
+  for(let i=1; i<data.length; i++) {
+    let cat = data[i][0];
+    let nom = data[i][1];
+    let prot = parseFloat(data[i][2]) || 0;
+    let glu = parseFloat(data[i][3]) || 0;
+    let lip = parseFloat(data[i][4]) || 0;
+    let type = data[i][5];
+    
+    if (!cat || !nom) continue;
+    
+    if (!equivalences[cat]) equivalences[cat] = {};
+    equivalences[cat][nom] = { prot: prot, glu: glu, lip: lip, type: type };
+  }
+  
+  return equivalences;
+}
+
 function creerModeleFeuille() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
+  
+  // S'assurer que la base d'aliments existe et la charger
+  const equivalences = chargerEquivalences();
+  
   let sheet = ss.getSheetByName("Dashboard Diététique");
   if (!sheet) {
     sheet = ss.getSheets()[0];
@@ -141,8 +201,8 @@ function creerModeleFeuille() {
     let rowBackgrounds = ["#ffffff", "#ffffff", "#ffffff"];
     let rowValidations = [null, null, null];
     
-    if (category && EQUIVALENCES[category]) {
-      const choix = Object.keys(EQUIVALENCES[category]);
+    if (category && equivalences[category]) {
+      const choix = Object.keys(equivalences[category]);
       const rule = SpreadsheetApp.newDataValidation().requireValueInList(choix, true).build();
       rowValidations[1] = rule;
       const defaultVal = choix.includes(typeAliment) ? typeAliment : choix[0];
@@ -198,9 +258,9 @@ function getStartRow(sheet) {
   return startRow;
 }
 
-function getCategoryOfAliment(aliment) {
-  for (let cat in EQUIVALENCES) {
-    if (EQUIVALENCES[cat][aliment]) return cat;
+function getCategoryOfAliment(aliment, equivalences) {
+  for (let cat in equivalences) {
+    if (equivalences[cat][aliment]) return cat;
   }
   return null;
 }
@@ -243,12 +303,21 @@ function onEdit(e) {
   const range = e.range;
   const sheet = e.source.getActiveSheet();
   
+  // Si on modifie la base aliments, pas besoin de recalculer tout de suite,
+  // ou on pourrait, mais on va surtout recalculer quand le Dashboard est actif.
   if (sheet.getName() === "Dashboard Diététique" && range.getRow() <= 40 && range.getColumn() <= 5) {
     try {
       recalculerMenu();
     } catch(err) {
       e.source.toast("Erreur de calcul : " + err.message, "Alerte Script");
     }
+  } else if (sheet.getName() === "Base Aliments") {
+    // Optionnel : recréer les listes déroulantes si la base est modifiée
+    // Mais cela demanderait de re-scanner les aliments existants sur le Dashboard
+    // Pour l'instant, un simple recalcul mettra à jour les calculs avec les nouvelles valeurs !
+    try {
+      recalculerMenu();
+    } catch(e) {}
   }
 }
 
@@ -260,6 +329,7 @@ function recalculerMenu() {
   if (!sheet) return;
   
   const profil = calculerProfilMetabolique(sheet);
+  const equivalences = chargerEquivalences();
   
   // Retour visuel au praticien
   sheet.getRange("E5").setValue(Math.round(profil.tdee) + " kcal");
@@ -289,10 +359,10 @@ function recalculerMenu() {
   for(let i=0; i<menuData.length; i++) {
     const aliment = menuData[i][0];
     if (!aliment || aliment === "") continue;
-    const cat = getCategoryOfAliment(aliment);
+    const cat = getCategoryOfAliment(aliment, equivalences);
     
-    if (cat && EQUIVALENCES[cat] && EQUIVALENCES[cat][aliment]) {
-      let item = EQUIVALENCES[cat][aliment];
+    if (cat && equivalences[cat] && equivalences[cat][aliment]) {
+      let item = equivalences[cat][aliment];
       if (item.type === "fixe") {
         fixedProt += item.prot;
         fixedGlu += item.glu;
@@ -346,8 +416,8 @@ function recalculerMenu() {
   
   for(let i=0; i<menuData.length; i++) {
     const aliment = menuData[i][0];
-    const cat = getCategoryOfAliment(aliment);
-    if (cat && EQUIVALENCES[cat] && EQUIVALENCES[cat][aliment] && EQUIVALENCES[cat][aliment].type === "fixe") {
+    const cat = getCategoryOfAliment(aliment, equivalences);
+    if (cat && equivalences[cat] && equivalences[cat][aliment] && equivalences[cat][aliment].type === "fixe") {
       sheet.getRange(i + startRow, 3).setValue("1 portion");
     }
   }
