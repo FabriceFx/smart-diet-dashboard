@@ -186,6 +186,18 @@ function escapeHtml(unsafe) {
     .replace(/'/g, "&#039;");
 }
 
+function getStartRow(sheet) {
+  let startRow = 11;
+  const headerSearch = sheet.getRange("A5:A15").getValues();
+  for(let i=0; i<headerSearch.length; i++) {
+    if (headerSearch[i][0] === "REPAS") {
+      startRow = i + 5 + 1;
+      break;
+    }
+  }
+  return startRow;
+}
+
 function getCategoryOfAliment(aliment) {
   for (let cat in EQUIVALENCES) {
     if (EQUIVALENCES[cat][aliment]) return cat;
@@ -266,18 +278,11 @@ function recalculerMenu() {
   const targetGlu = (profil.caloriesCibles * (pctGlu/100)) / 4;
   const targetLip = (profil.caloriesCibles * (pctLip/100)) / 9;
   
-  // Rétrocompatibilité : trouver dynamiquement la ligne de départ du menu
-  let startRow = 11;
-  const headerSearch = sheet.getRange("A5:A15").getValues();
-  for(let i=0; i<headerSearch.length; i++) {
-    if (headerSearch[i][0] === "REPAS") {
-      startRow = i + 5 + 1; // +5 pour l'offset, +1 pour la ligne sous l'en-tête
-      break;
-    }
-  }
+  const startRow = getStartRow(sheet);
+  const numRows = Math.max(1, sheet.getLastRow() - startRow + 1);
   
   // 2. Lire le menu
-  const menuData = sheet.getRange(startRow, 2, 35, 1).getValues();
+  const menuData = sheet.getRange(startRow, 2, numRows, 1).getValues();
   let fixedProt = 0, fixedGlu = 0, fixedLip = 0;
   let dynamicRows = [];
   
@@ -385,7 +390,10 @@ function exporterPDF() {
     `;
   }
   
-  const menuData = sheet.getRange("A11:C40").getValues();
+  const startRow = getStartRow(sheet);
+  const numRows = Math.max(1, sheet.getLastRow() - startRow + 1);
+  const menuData = sheet.getRange(startRow, 1, numRows, 3).getValues();
+  
   let tableRows = "";
   menuData.forEach(row => {
     if (row[1] !== "") {
