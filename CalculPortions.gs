@@ -330,9 +330,14 @@ function calculerProfilMetabolique(sheet) {
   const activiteStr = String(sheet.getRange("B7").getValue());
   const activiteFactor = NIVEAUX_ACTIVITE[activiteStr] || 1.375;
   
+  let messages = [];
+  
   // Calcul du déficit dynamique (plafond clinique 25%)
   const kilosAPerdre = Math.max(0, poids - poidsCible);
+  if (poids < poidsCible) messages.push("📈 Prise de masse (Déficit bloqué à 0).");
+  
   const deficitPct = Math.min(25, kilosAPerdre * 2);
+  if (kilosAPerdre * 2 > 25) messages.push("🔒 Plafond atteint (Déficit bloqué à -25%).");
   
   let bmr = (10 * poids) + (6.25 * taille) - (5 * age);
   bmr += (sexe.toLowerCase() === "homme") ? 5 : -161;
@@ -340,12 +345,14 @@ function calculerProfilMetabolique(sheet) {
   
   // Planchers de sécurité calorique
   const plancher = (sexe.toLowerCase() === "homme") ? 1500 : 1200;
-  const caloriesCibles = Math.max(plancher, tdee * (1 - deficitPct/100)); 
+  const caloriesUncapped = tdee * (1 - deficitPct/100);
+  const caloriesCibles = Math.max(plancher, caloriesUncapped); 
+  if (caloriesUncapped < plancher) messages.push(`🛡️ Plancher vital atteint (Bloqué à ${plancher} kcal).`);
   
   const deficitJournalier = Math.max(0, tdee - caloriesCibles);
   const perteHebdo = (deficitJournalier * 7) / 7700;
   
-  return { poids, poidsCible, tdee, caloriesCibles, perteHebdo };
+  return { poids, poidsCible, tdee, caloriesCibles, perteHebdo, messages };
 }
 
 /**
@@ -360,7 +367,7 @@ function onEdit(e) {
   // ou on pourrait, mais on va surtout recalculer quand le Dashboard est actif.
   if (sheet.getName() === "Dashboard Diététique" && range.getRow() <= 40 && range.getColumn() <= 5) {
     try {
-      recalculerMenu();
+      recalculerMenu(range);
     } catch(err) {
       e.source.toast("Erreur de calcul : " + err.message, "Alerte Script");
     }
@@ -376,7 +383,7 @@ function onEdit(e) {
 /**
  * L'Algorithme Solver de recalcul clinique
  */
-function recalculerMenu() {
+function recalculerMenu(editedRange = null) {
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Dashboard Diététique");
   if (!sheet) return;
   
@@ -386,6 +393,13 @@ function recalculerMenu() {
   // Retour visuel au praticien
   sheet.getRange("E5").setValue(Math.round(profil.tdee) + " kcal");
   sheet.getRange("E6").setValue(Math.round(profil.caloriesCibles) + " kcal");
+  
+  // Afficher les alertes cliniques si le praticien est en train de modifier le profil patient
+  if (editedRange && editedRange.getColumn() === 2 && editedRange.getRow() >= 2 && editedRange.getRow() <= 7) {
+    if (profil.messages && profil.messages.length > 0) {
+      SpreadsheetApp.getActiveSpreadsheet().toast(profil.messages.join("\n"), "ℹ️ Limites Cliniques", 6);
+    }
+  }
   
   const pctProt = getNum(sheet, "E2", 30);
   const pctGlu = getNum(sheet, "E3", 40);
