@@ -1,5 +1,11 @@
 /**
  * Outil Diététique Clinique - Moteur de Calcul par Résolution Itérative (Solver)
+ *
+ * NOTE SUR L'ALGORITHME : L'équilibrage des assiettes utilise une descente coordonnée heuristique.
+ * Chaque catégorie (viandes, féculents, graisses) ajuste sa portion proportionnellement 
+ * à l'écart constaté sur son macro-nutriment de prédilection (protéines, glucides, lipides).
+ * Le système converge naturellement en ~10-15 itérations car les matrices croisées
+ * (ex: glucides dans la viande) sont négligeables dans ce modèle simplifié.
  */
 
 const EQUIVALENCES = {
@@ -43,6 +49,14 @@ const EQUIVALENCES = {
   }
 };
 
+const NIVEAUX_ACTIVITE = {
+  "Sédentaire (peu ou pas d'exercice)": 1.2,
+  "Léger (exercice 1-3 j/sem)": 1.375,
+  "Modéré (exercice 3-5 j/sem)": 1.55,
+  "Actif (exercice 6-7 j/sem)": 1.725,
+  "Très actif (physique)": 1.9
+};
+
 function onOpen() {
   SpreadsheetApp.getUi().createMenu('🍎 Menu Diététique')
       .addItem('1. Générer le Dashboard interactif', 'creerModeleFeuille')
@@ -62,10 +76,10 @@ function creerModeleFeuille() {
   sheet.clear(); 
   
   sheet.getRange("A1:B1").setValues([["CONFIGURATION PATIENT", "VALEURS"]]).setFontWeight("bold").setBackground("#d9ead3");
-  sheet.getRange("A2:A6").setValues([
-    ["Poids actuel (kg)"], ["Taille (cm)"], ["Âge (années)"], ["Sexe (Homme/Femme)"], ["Poids cible (kg)"]
+  sheet.getRange("A2:A7").setValues([
+    ["Poids actuel (kg)"], ["Taille (cm)"], ["Âge (années)"], ["Sexe (Homme/Femme)"], ["Poids cible (kg)"], ["Niveau d'activité"]
   ]);
-  sheet.getRange("B2:B6").setValues([[80], [175], [35], ["Femme"], [75]]).setBackground("#e6f3ff");
+  sheet.getRange("B2:B7").setValues([[80], [175], [35], ["Femme"], [75], ["Léger (exercice 1-3 j/sem)"]]).setBackground("#e6f3ff");
   
   sheet.getRange("D1:E1").setValues([["MACRO-NUTRIMENTS", "OBJECTIF"]]).setFontWeight("bold").setBackground("#d9ead3");
   sheet.getRange("D2:D4").setValues([["Protéines (%)"], ["Glucides (%)"], ["Lipides (%)"]]);
@@ -77,10 +91,13 @@ function creerModeleFeuille() {
   const regleSexe = SpreadsheetApp.newDataValidation().requireValueInList(["Homme", "Femme"], true).build();
   sheet.getRange("B5").setDataValidation(regleSexe);
   
-  sheet.showColumns(1, sheet.getMaxColumns()); // S'assurer que rien n'est caché
+  const regleActivite = SpreadsheetApp.newDataValidation().requireValueInList(Object.keys(NIVEAUX_ACTIVITE), true).build();
+  sheet.getRange("B7").setDataValidation(regleActivite);
   
-  sheet.getRange("A8:C8").merge().setValue("PROGRAMME ALIMENTAIRE PERSONNALISÉ").setFontWeight("bold").setHorizontalAlignment("center").setBackground("#ffe599");
-  sheet.getRange("A9:C9").setValues([["REPAS", "ALIMENTS (Cliquez pour changer)", "QUANTITÉ CALCULÉE"]]).setFontWeight("bold").setBackground("#f3f3f3");
+  sheet.showColumns(1, sheet.getMaxColumns()); 
+  
+  sheet.getRange("A9:C9").merge().setValue("PROGRAMME ALIMENTAIRE PERSONNALISÉ").setFontWeight("bold").setHorizontalAlignment("center").setBackground("#ffe599");
+  sheet.getRange("A10:C10").setValues([["REPAS", "ALIMENTS (Cliquez pour changer)", "QUANTITÉ CALCULÉE"]]).setFontWeight("bold").setBackground("#f3f3f3");
   
   const menusParams = [
     ["Petit-déjeuner", "Café / Thé", null],
@@ -141,7 +158,7 @@ function creerModeleFeuille() {
     validations.push(rowValidations);
   });
   
-  const range = sheet.getRange(10, 1, values.length, 3);
+  const range = sheet.getRange(11, 1, values.length, 3);
   range.setValues(values);
   range.setBackgrounds(backgrounds);
   range.setDataValidations(validations);
@@ -153,6 +170,21 @@ function creerModeleFeuille() {
   recalculerMenu();
 }
 
+/** Utilitaires sécurisés */
+function getNum(sheet, rangeA1, defaultVal) {
+  const raw = parseFloat(sheet.getRange(rangeA1).getValue());
+  return isNaN(raw) ? defaultVal : raw;
+}
+
+function escapeHtml(unsafe) {
+  return (unsafe || "").toString()
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 function getCategoryOfAliment(aliment) {
   for (let cat in EQUIVALENCES) {
     if (EQUIVALENCES[cat][aliment]) return cat;
@@ -161,17 +193,44 @@ function getCategoryOfAliment(aliment) {
 }
 
 /**
+ * Calcul du Profil Métabolique centralisé
+ */
+function calculerProfilMetabolique(sheet) {
+  const poids = getNum(sheet, "B2", 80);
+  const taille = getNum(sheet, "B3", 175);
+  const age = getNum(sheet, "B4", 35);
+  const sexe = String(sheet.getRange("B5").getValue()) || "Femme";
+  const poidsCible = getNum(sheet, "B6", poids);
+  const activiteStr = String(sheet.getRange("B7").getValue());
+  const activiteFactor = NIVEAUX_ACTIVITE[activiteStr] || 1.375;
+  
+  // Calcul du déficit dynamique (plafond clinique 25%)
+  const kilosAPerdre = Math.max(0, poids - poidsCible);
+  const deficitPct = Math.min(25, kilosAPerdre * 2);
+  
+  let bmr = (10 * poids) + (6.25 * taille) - (5 * age);
+  bmr += (sexe.toLowerCase() === "homme") ? 5 : -161;
+  const tdee = bmr * activiteFactor;
+  
+  // Planchers de sécurité calorique
+  const plancher = (sexe.toLowerCase() === "homme") ? 1500 : 1200;
+  const caloriesCibles = Math.max(plancher, tdee * (1 - deficitPct/100)); 
+  
+  const deficitJournalier = Math.max(0, tdee - caloriesCibles);
+  const perteHebdo = (deficitJournalier * 7) / 7700;
+  
+  return { poids, poidsCible, tdee, caloriesCibles, perteHebdo };
+}
+
+/**
  * Déclencheur qui s'active à chaque modification dans la feuille
  */
 function onEdit(e) {
   if (!e) return;
-  const sheet = e.source.getActiveSheet();
   const range = e.range;
-  const row = range.getRow();
-  const col = range.getColumn();
+  const sheet = e.source.getActiveSheet();
   
-  // Si on modifie la config (A1:E6) ou un aliment (C10:C40)
-  if (row <= 40) {
+  if (sheet.getName() === "Dashboard Diététique" && range.getRow() <= 40 && range.getColumn() <= 5) {
     recalculerMenu();
   }
 }
@@ -183,37 +242,27 @@ function recalculerMenu() {
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Dashboard Diététique");
   if (!sheet) return;
   
-  // 1. Lire la config
-  const poids = parseFloat(sheet.getRange("B2").getValue()) || 80;
-  const taille = parseFloat(sheet.getRange("B3").getValue()) || 175;
-  const age = parseFloat(sheet.getRange("B4").getValue()) || 35;
-  const sexe = String(sheet.getRange("B5").getValue()) || "Femme";
-  const poidsCible = parseFloat(sheet.getRange("B6").getValue()) || poids;
-  
-  // Calcul du déficit dynamique : 2% de déficit par kilo à perdre (plafonné à 25% max pour la santé)
-  const kilosAPerdre = Math.max(0, poids - poidsCible);
-  const deficitPct = Math.min(25, kilosAPerdre * 2);
-  
-  const pctProt = (parseFloat(sheet.getRange("E2").getValue()) || 30) / 100;
-  const pctGlu = (parseFloat(sheet.getRange("E3").getValue()) || 40) / 100;
-  const pctLip = (parseFloat(sheet.getRange("E4").getValue()) || 30) / 100;
-  
-  // TDEE & Cibles
-  let bmr = (10 * poids) + (6.25 * taille) - (5 * age);
-  bmr += (sexe.toLowerCase() === "homme") ? 5 : -161;
-  const tdee = bmr * 1.375;
-  const caloriesCibles = Math.max(1200, tdee * (1 - deficitPct/100)); 
+  const profil = calculerProfilMetabolique(sheet);
   
   // Retour visuel au praticien
-  sheet.getRange("E5").setValue(Math.round(tdee) + " kcal");
-  sheet.getRange("E6").setValue(Math.round(caloriesCibles) + " kcal");
+  sheet.getRange("E5").setValue(Math.round(profil.tdee) + " kcal");
+  sheet.getRange("E6").setValue(Math.round(profil.caloriesCibles) + " kcal");
   
-  const targetProt = (caloriesCibles * pctProt) / 4;
-  const targetGlu = (caloriesCibles * pctGlu) / 4;
-  const targetLip = (caloriesCibles * pctLip) / 9;
+  const pctProt = getNum(sheet, "E2", 30);
+  const pctGlu = getNum(sheet, "E3", 40);
+  const pctLip = getNum(sheet, "E4", 30);
+  
+  // Validation Clinique des Macros
+  if (Math.abs((pctProt + pctGlu + pctLip) - 100) > 0.1) {
+    SpreadsheetApp.getActiveSpreadsheet().toast("⚠️ Vos objectifs macros ne font pas 100% au total !", "Alerte de vérification", 4);
+  }
+  
+  const targetProt = (profil.caloriesCibles * (pctProt/100)) / 4;
+  const targetGlu = (profil.caloriesCibles * (pctGlu/100)) / 4;
+  const targetLip = (profil.caloriesCibles * (pctLip/100)) / 9;
   
   // 2. Lire le menu
-  const menuData = sheet.getRange("B10:B40").getValues();
+  const menuData = sheet.getRange("B11:B40").getValues();
   let fixedProt = 0, fixedGlu = 0, fixedLip = 0;
   let dynamicRows = [];
   
@@ -229,12 +278,12 @@ function recalculerMenu() {
         fixedGlu += item.glu;
         fixedLip += item.lip;
       } else {
-        dynamicRows.push({ rowObj: i+10, cat: cat, item: item });
+        dynamicRows.push({ rowObj: i+11, cat: cat, item: item });
       }
     }
   }
   
-  // 3. Algorithme de résolution itérative (Solver)
+  // 3. Algorithme de résolution itérative
   let portions = {};
   dynamicRows.forEach(d => { portions[d.rowObj] = d.item.type === 'g' ? 100 : 1; });
   
@@ -250,9 +299,10 @@ function recalculerMenu() {
       sumLip += d.item.lip * q;
     });
     
-    let protRatio = targetProt / sumProt;
-    let gluRatio = targetGlu / sumGlu;
-    let lipRatio = targetLip / sumLip;
+    // Garde-fous mathématiques pour la division par zéro
+    let protRatio = sumProt > 0 ? targetProt / sumProt : 1;
+    let gluRatio = sumGlu > 0 ? targetGlu / sumGlu : 1;
+    let lipRatio = sumLip > 0 ? targetLip / sumLip : 1;
     
     dynamicRows.forEach(d => {
       if (d.cat === "viandes") portions[d.rowObj] *= protRatio;
@@ -266,7 +316,8 @@ function recalculerMenu() {
     let qte = portions[d.rowObj];
     let texte = "";
     if (d.item.type === "unite") {
-      texte = Math.max(1, Math.round(qte)) + " unité(s)";
+      let u = Math.max(1, Math.round(qte));
+      texte = u + (u <= 1 ? " unité" : " unités");
     } else {
       texte = (Math.round(qte / 5) * 5) + " g";
     }
@@ -277,7 +328,7 @@ function recalculerMenu() {
     const aliment = menuData[i][0];
     const cat = getCategoryOfAliment(aliment);
     if (cat && EQUIVALENCES[cat] && EQUIVALENCES[cat][aliment] && EQUIVALENCES[cat][aliment].type === "fixe") {
-      sheet.getRange(i+10, 3).setValue("1 portion");
+      sheet.getRange(i+11, 3).setValue("1 portion");
     }
   }
 }
@@ -292,20 +343,19 @@ function exporterPDF() {
   
   const response = ui.prompt("Exportation PDF", "Saisissez le nom du patient :", ui.ButtonSet.OK_CANCEL);
   if (response.getSelectedButton() !== ui.Button.OK) return;
-  const nomPatient = response.getResponseText() || "Patient";
+  const nomPatient = escapeHtml(response.getResponseText()) || "Patient";
   
   const responseEmail = ui.prompt("Envoi par Email (Optionnel)", "Saisissez l'adresse email du patient (laissez vide pour ignorer) :", ui.ButtonSet.OK_CANCEL);
   let emailPatient = "";
   if (responseEmail.getSelectedButton() === ui.Button.OK) {
-    emailPatient = responseEmail.getResponseText().trim();
+    emailPatient = escapeHtml(responseEmail.getResponseText().trim());
   }
   
-  // S'assurer que le graphique existe
   let sheetSuivi = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Suivi Poids");
   if (!sheetSuivi) {
     creerFeuilleSuivi();
     sheetSuivi = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Suivi Poids");
-    SpreadsheetApp.getActiveSpreadsheet().setActiveSheet(sheet); // Revenir au dashboard
+    SpreadsheetApp.getActiveSpreadsheet().setActiveSheet(sheet);
   }
   
   let chartHtml = "";
@@ -320,12 +370,12 @@ function exporterPDF() {
     `;
   }
   
-  const menuData = sheet.getRange("A10:C40").getValues();
+  const menuData = sheet.getRange("A11:C40").getValues();
   let tableRows = "";
   menuData.forEach(row => {
     if (row[1] !== "") {
-      const repasStr = row[0] !== "" ? `<span style="color: #1a73e8; font-weight: 500;">${row[0]}</span>` : "";
-      tableRows += `<tr><td style="padding: 12px 8px; border-bottom: 1px solid #f1f3f4; color: #3c4043;">${repasStr}</td><td style="padding: 12px 8px; border-bottom: 1px solid #f1f3f4; color: #3c4043;">${row[1]}</td><td style="padding: 12px 8px; border-bottom: 1px solid #f1f3f4; font-weight: 500; color: #d93025;">${row[2]}</td></tr>`;
+      const repasStr = row[0] !== "" ? `<span style="color: #1a73e8; font-weight: 500;">${escapeHtml(row[0])}</span>` : "";
+      tableRows += `<tr><td style="padding: 12px 8px; border-bottom: 1px solid #f1f3f4; color: #3c4043;">${repasStr}</td><td style="padding: 12px 8px; border-bottom: 1px solid #f1f3f4; color: #3c4043;">${escapeHtml(row[1])}</td><td style="padding: 12px 8px; border-bottom: 1px solid #f1f3f4; font-weight: 500; color: #d93025;">${escapeHtml(row[2])}</td></tr>`;
     }
   });
 
@@ -342,8 +392,8 @@ function exporterPDF() {
       
       <div style="background-color: #f8f9fa; padding: 20px; border-radius: 12px; margin-bottom: 35px; border: 1px solid #e8eaed;">
         <h3 style="color: #202124; margin-top: 0; font-weight: 500; font-size: 18px;">Objectifs du programme</h3>
-        <p style="margin: 6px 0; color: #3c4043; font-size: 14px;"><b>Patiente :</b> ${sheet.getRange("B2").getValue()} kg (Cible : ${sheet.getRange("B6").getValue()} kg), ${sheet.getRange("B3").getValue()} cm, ${sheet.getRange("B4").getValue()} ans</p>
-        <p style="margin: 6px 0; color: #3c4043; font-size: 14px;"><b>Répartition journalière :</b> Protéines ${sheet.getRange("E2").getValue()}% | Glucides ${sheet.getRange("E3").getValue()}% | Lipides ${sheet.getRange("E4").getValue()}%</p>
+        <p style="margin: 6px 0; color: #3c4043; font-size: 14px;"><b>Patiente :</b> ${getNum(sheet, "B2", 80)} kg (Cible : ${getNum(sheet, "B6", 80)} kg), ${getNum(sheet, "B3", 175)} cm, ${getNum(sheet, "B4", 35)} ans</p>
+        <p style="margin: 6px 0; color: #3c4043; font-size: 14px;"><b>Répartition journalière :</b> Protéines ${getNum(sheet, "E2", 30)}% | Glucides ${getNum(sheet, "E3", 40)}% | Lipides ${getNum(sheet, "E4", 30)}%</p>
       </div>
       
       <table border="0" cellpadding="0" cellspacing="0" style="width:100%; border-collapse:collapse;">
@@ -356,6 +406,15 @@ function exporterPDF() {
       </table>
       
       ${chartHtml}
+      
+      <div style="margin-top: 50px; font-size: 11px; color: #7f8c8d; border-top: 1px solid #e8eaed; padding-top: 15px;">
+        <p style="margin: 3px 0;">* Notes cliniques sur les méthodes de calcul algorithmique utilisées :</p>
+        <ul style="margin-top: 3px; padding-left: 15px;">
+          <li>Le métabolisme de base (TDEE) est estimé via l'équation de Mifflin-St Jeor avec intégration du facteur d'activité déclaré.</li>
+          <li>Le déficit calorique est proportionnel à l'objectif de poids, plafonné à -25% pour limiter le risque de sous-nutrition. Un plancher absolu de sécurité (1200 kcal femme / 1500 kcal homme) est imposé.</li>
+          <li>La courbe prédictive postule qu'un déficit cumulé de 7700 kcal correspond en moyenne physiologique à 1 kg de masse grasse perdue (donnée standard heuristique).</li>
+        </ul>
+      </div>
     </body>
     </html>
   `;
@@ -414,21 +473,7 @@ function creerFeuilleSuivi() {
     return;
   }
   
-  const poidsActuel = parseFloat(mainSheet.getRange("B2").getValue()) || 80;
-  const poidsCible = parseFloat(mainSheet.getRange("B6").getValue()) || poidsActuel;
-  
-  const kilosAPerdre = Math.max(0, poidsActuel - poidsCible);
-  const deficitPct = Math.min(25, kilosAPerdre * 2);
-  
-  const taille = parseFloat(mainSheet.getRange("B3").getValue()) || 175;
-  const age = parseFloat(mainSheet.getRange("B4").getValue()) || 35;
-  const sexe = String(mainSheet.getRange("B5").getValue()) || "Femme";
-  let bmr = (10 * poidsActuel) + (6.25 * taille) - (5 * age);
-  bmr += (sexe.toLowerCase() === "homme") ? 5 : -161;
-  const tdee = bmr * 1.375;
-  
-  const deficitJournalier = tdee * (deficitPct / 100);
-  const perteHebdo = (deficitJournalier * 7) / 7700;
+  const profil = calculerProfilMetabolique(mainSheet);
 
   let sheetSuivi = ss.getSheetByName("Suivi Poids");
   if (!sheetSuivi) {
@@ -445,21 +490,21 @@ function creerFeuilleSuivi() {
   
   sheetSuivi.getRange("A4:D4").setValues([["Semaine", "Date", "Poids Théorique (kg)", "Poids Réel (kg)"]]).setFontWeight("bold").setBackground("#f3f3f3");
   
-  let currentPoids = poidsActuel;
+  let currentPoids = profil.poids;
   const values = [];
   const backgrounds = [];
   
   for(let i=0; i<=20; i++) {
     let semaine = i;
     let dateFormula = i === 0 ? "=B2" : `=B2 + (A${5+i}*7)`;
-    let theorique = Math.round(currentPoids * 100) / 100; // Doit rester un nombre, pas un string !
+    let theorique = Math.round(currentPoids * 100) / 100;
     
-    if (currentPoids > poidsCible) {
-      currentPoids -= perteHebdo;
-      if (currentPoids < poidsCible) currentPoids = poidsCible;
+    if (currentPoids > profil.poidsCible) {
+      currentPoids -= profil.perteHebdo;
+      if (currentPoids < profil.poidsCible) currentPoids = profil.poidsCible;
     }
     
-    values.push([semaine, dateFormula, theorique, i===0 ? poidsActuel : ""]);
+    values.push([semaine, dateFormula, theorique, i===0 ? profil.poids : ""]);
     backgrounds.push(["#ffffff", "#ffffff", "#ffffff", i===0 ? "#ffffff" : "#fff2cc"]);
   }
   
@@ -470,9 +515,9 @@ function creerFeuilleSuivi() {
   
   const chartBuilder = sheetSuivi.newChart()
     .asLineChart()
-    .addRange(sheetSuivi.getRange(4, 2, values.length + 1, 1)) // X: Dates
-    .addRange(sheetSuivi.getRange(4, 3, values.length + 1, 1)) // Y1: Théorique
-    .addRange(sheetSuivi.getRange(4, 4, values.length + 1, 1)) // Y2: Réel
+    .addRange(sheetSuivi.getRange(4, 2, values.length + 1, 1))
+    .addRange(sheetSuivi.getRange(4, 3, values.length + 1, 1))
+    .addRange(sheetSuivi.getRange(4, 4, values.length + 1, 1))
     .setPosition(4, 6, 0, 0)
     .setOption('title', 'Suivi de la Perte de Poids (Théorique vs Réel)')
     .setOption('curveType', 'function')
@@ -481,7 +526,7 @@ function creerFeuilleSuivi() {
     .setOption('hAxis', {title: 'Date'})
     .setOption('series', {
        0: { color: '#bdc3c7', lineDashStyle: [4, 4] },
-       1: { color: '#3498db', lineWidth: 3, pointSize: 7 } // pointSize permet d'afficher le point même sans 2ème valeur
+       1: { color: '#3498db', lineWidth: 3, pointSize: 7 }
      });
      
   sheetSuivi.insertChart(chartBuilder.build());
