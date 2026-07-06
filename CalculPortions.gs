@@ -14,7 +14,10 @@ const DEFAULT_EQUIVALENCES = {
     "Poisson / Crustacés": { prot: 0.20, glu: 0.0, lip: 0.02, type: "g" },
     "Œufs (unités)": { prot: 6.0, glu: 0.0, lip: 5.0, type: "unite" },
     "Saumon fumé": { prot: 0.22, glu: 0.0, lip: 0.10, type: "g" },
-    "Tofu / Tempeh": { prot: 0.15, glu: 0.02, lip: 0.08, type: "g" }
+    "Tofu / Tempeh": { prot: 0.15, glu: 0.02, lip: 0.08, type: "g" },
+    "Steak haché 5% MG": { prot: 0.21, glu: 0.0, lip: 0.05, type: "g" },
+    "Thon au naturel (boîte)": { prot: 0.25, glu: 0.0, lip: 0.01, type: "g" },
+    "Saumon frais": { prot: 0.20, glu: 0.0, lip: 0.13, type: "g" }
   },
   feculents: {
     "Pomme de terre": { prot: 0.02, glu: 0.17, lip: 0.0, type: "g" },
@@ -22,13 +25,20 @@ const DEFAULT_EQUIVALENCES = {
     "Semoule (cuite)": { prot: 0.04, glu: 0.28, lip: 0.01, type: "g" },
     "Légumes secs (cuits)": { prot: 0.08, glu: 0.20, lip: 0.01, type: "g" },
     "Pain de mie / céréales": { prot: 0.09, glu: 0.50, lip: 0.04, type: "g" },
-    "Purée": { prot: 0.02, glu: 0.15, lip: 0.05, type: "g" }
+    "Purée": { prot: 0.02, glu: 0.15, lip: 0.05, type: "g" },
+    "Quinoa / Boulgour (cuits)": { prot: 0.04, glu: 0.21, lip: 0.02, type: "g" },
+    "Patate douce (cuite)": { prot: 0.02, glu: 0.20, lip: 0.0, type: "g" },
+    "Flocons d'avoine": { prot: 0.13, glu: 0.60, lip: 0.07, type: "g" },
+    "Pain complet": { prot: 0.09, glu: 0.45, lip: 0.02, type: "g" }
   },
   matieres_grasses: {
     "Huile d'olive (c.à.s)": { prot: 0.0, glu: 0.0, lip: 10.0, type: "unite" },
     "Beurre": { prot: 0.0, glu: 0.0, lip: 0.80, type: "g" },
     "Amandes / Noix": { prot: 0.20, glu: 0.10, lip: 0.50, type: "g" },
-    "Avocat (demi)": { prot: 2.0, glu: 5.0, lip: 15.0, type: "unite" }
+    "Avocat (demi)": { prot: 2.0, glu: 5.0, lip: 15.0, type: "unite" },
+    "Huile de colza / noix (c.à.s)": { prot: 0.0, glu: 0.0, lip: 10.0, type: "unite" },
+    "Beurre de cacahuète / Purée d'amande": { prot: 0.25, glu: 0.15, lip: 0.50, type: "g" },
+    "Chocolat noir >70%": { prot: 0.08, glu: 0.35, lip: 0.40, type: "g" }
   },
   produits_laitiers: {
     "Yaourt nature": { prot: 5.0, glu: 6.0, lip: 1.5, type: "fixe" },
@@ -36,7 +46,10 @@ const DEFAULT_EQUIVALENCES = {
     "Petit-suisse (60g)": { prot: 6.0, glu: 2.0, lip: 2.0, type: "fixe" },
     "Fromage (30g)": { prot: 7.0, glu: 0.0, lip: 9.0, type: "fixe" },
     "Skyr (100g)": { prot: 10.0, glu: 4.0, lip: 0.0, type: "fixe" },
-    "Lait 1/2 écrémé (verre)": { prot: 6.0, glu: 9.0, lip: 3.0, type: "fixe" }
+    "Lait 1/2 écrémé (verre)": { prot: 6.0, glu: 9.0, lip: 3.0, type: "fixe" },
+    "Lait d'amande sans sucre (verre)": { prot: 1.0, glu: 0.5, lip: 3.0, type: "fixe" },
+    "Lait de soja (verre)": { prot: 8.0, glu: 2.0, lip: 4.0, type: "fixe" },
+    "Mozzarella / Feta (30g)": { prot: 5.0, glu: 0.5, lip: 6.0, type: "fixe" }
   },
   fruits: {
     "Pomme / Poire / Orange": { prot: 0.0, glu: 15.0, lip: 0.0, type: "fixe" },
@@ -45,12 +58,18 @@ const DEFAULT_EQUIVALENCES = {
     "Banane (demi)": { prot: 1.0, glu: 15.0, lip: 0.0, type: "fixe" },
     "Compote sans sucre (100g)": { prot: 0.0, glu: 12.0, lip: 0.0, type: "fixe" },
     "Fraises / Fruits rouges (barquette)": { prot: 1.0, glu: 10.0, lip: 0.0, type: "fixe" },
-    "Melon / Ananas (1/4)": { prot: 1.0, glu: 10.0, lip: 0.0, type: "fixe" }
+    "Melon / Ananas (1/4)": { prot: 1.0, glu: 10.0, lip: 0.0, type: "fixe" },
+    "Pêche / Nectarine": { prot: 1.0, glu: 10.0, lip: 0.0, type: "fixe" },
+    "Mangue (1/2)": { prot: 1.0, glu: 15.0, lip: 0.0, type: "fixe" },
+    "Raisin (petite grappe)": { prot: 0.0, glu: 15.0, lip: 0.0, type: "fixe" }
   },
   legumes: {
     "Légumes verts (haricots, épinards, courgette...)": { prot: 0.02, glu: 0.05, lip: 0.005, type: "g" },
     "Carottes / Légumes racines": { prot: 0.01, glu: 0.08, lip: 0.002, type: "g" },
-    "Tomates / Légumes d'été": { prot: 0.01, glu: 0.04, lip: 0.002, type: "g" }
+    "Tomates / Légumes d'été": { prot: 0.01, glu: 0.04, lip: 0.002, type: "g" },
+    "Salade (laitue, mâche, endives)": { prot: 0.01, glu: 0.02, lip: 0.002, type: "g" },
+    "Champignons": { prot: 0.02, glu: 0.03, lip: 0.002, type: "g" },
+    "Brocoli / Chou-fleur": { prot: 0.03, glu: 0.04, lip: 0.005, type: "g" }
   }
 };
 
