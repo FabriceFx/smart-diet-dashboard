@@ -10,66 +10,66 @@
 
 const DEFAULT_EQUIVALENCES = {
   viandes: {
-    "Viande rouge / blanche (maigre)": { prot: 0.25, glu: 0.0, lip: 0.05, type: "g" },
-    "Poisson / Crustacés": { prot: 0.20, glu: 0.0, lip: 0.02, type: "g" },
-    "Œufs (unités)": { prot: 6.0, glu: 0.0, lip: 5.0, type: "unite" },
-    "Saumon fumé": { prot: 0.22, glu: 0.0, lip: 0.10, type: "g" },
-    "Tofu / Tempeh": { prot: 0.15, glu: 0.02, lip: 0.08, type: "g" },
-    "Steak haché 5% MG": { prot: 0.21, glu: 0.0, lip: 0.05, type: "g" },
-    "Thon au naturel (boîte)": { prot: 0.25, glu: 0.0, lip: 0.01, type: "g" },
-    "Saumon frais": { prot: 0.20, glu: 0.0, lip: 0.13, type: "g" }
+    "Viande rouge / blanche (maigre)": { prot: 0.25, glu: 0.0, lip: 0.05, type: "g", ref: 100 },
+    "Poisson / Crustacés": { prot: 0.20, glu: 0.0, lip: 0.02, type: "g", ref: 100 },
+    "Œufs (unités)": { prot: 6.0, glu: 0.0, lip: 5.0, type: "unite", ref: "" },
+    "Saumon fumé": { prot: 0.22, glu: 0.0, lip: 0.10, type: "g", ref: 40 },
+    "Tofu / Tempeh": { prot: 0.15, glu: 0.02, lip: 0.08, type: "g", ref: 100 },
+    "Steak haché 5% MG": { prot: 0.21, glu: 0.0, lip: 0.05, type: "g", ref: 100 },
+    "Thon au naturel (boîte)": { prot: 0.25, glu: 0.0, lip: 0.01, type: "g", ref: 100 },
+    "Saumon frais": { prot: 0.20, glu: 0.0, lip: 0.13, type: "g", ref: 100 }
   },
   feculents: {
-    "Pomme de terre": { prot: 0.02, glu: 0.17, lip: 0.0, type: "g" },
-    "Pâtes / Riz (cuits)": { prot: 0.05, glu: 0.30, lip: 0.01, type: "g" },
-    "Semoule (cuite)": { prot: 0.04, glu: 0.28, lip: 0.01, type: "g" },
-    "Légumes secs (cuits)": { prot: 0.08, glu: 0.20, lip: 0.01, type: "g" },
-    "Pain de mie / céréales": { prot: 0.09, glu: 0.50, lip: 0.04, type: "g" },
-    "Purée": { prot: 0.02, glu: 0.15, lip: 0.05, type: "g" },
-    "Quinoa / Boulgour (cuits)": { prot: 0.04, glu: 0.21, lip: 0.02, type: "g" },
-    "Patate douce (cuite)": { prot: 0.02, glu: 0.20, lip: 0.0, type: "g" },
-    "Flocons d'avoine": { prot: 0.13, glu: 0.60, lip: 0.07, type: "g" },
-    "Pain complet": { prot: 0.09, glu: 0.45, lip: 0.02, type: "g" }
+    "Pomme de terre": { prot: 0.02, glu: 0.17, lip: 0.0, type: "g", ref: 150 },
+    "Pâtes / Riz (cuits)": { prot: 0.05, glu: 0.30, lip: 0.01, type: "g", ref: 100 },
+    "Semoule (cuite)": { prot: 0.04, glu: 0.28, lip: 0.01, type: "g", ref: 100 },
+    "Légumes secs (cuits)": { prot: 0.08, glu: 0.20, lip: 0.01, type: "g", ref: 100 },
+    "Pain de mie / céréales": { prot: 0.09, glu: 0.50, lip: 0.04, type: "g", ref: 40 },
+    "Purée": { prot: 0.02, glu: 0.15, lip: 0.05, type: "g", ref: 150 },
+    "Quinoa / Boulgour (cuits)": { prot: 0.04, glu: 0.21, lip: 0.02, type: "g", ref: 100 },
+    "Patate douce (cuite)": { prot: 0.02, glu: 0.20, lip: 0.0, type: "g", ref: 150 },
+    "Flocons d'avoine": { prot: 0.13, glu: 0.60, lip: 0.07, type: "g", ref: 40 },
+    "Pain complet": { prot: 0.09, glu: 0.45, lip: 0.02, type: "g", ref: 40 }
   },
   matieres_grasses: {
-    "Huile d'olive (c.à.s)": { prot: 0.0, glu: 0.0, lip: 10.0, type: "unite" },
-    "Beurre": { prot: 0.0, glu: 0.0, lip: 0.80, type: "g" },
-    "Amandes / Noix": { prot: 0.20, glu: 0.10, lip: 0.50, type: "g" },
-    "Avocat (demi)": { prot: 2.0, glu: 5.0, lip: 15.0, type: "unite" },
-    "Huile de colza / noix (c.à.s)": { prot: 0.0, glu: 0.0, lip: 10.0, type: "unite" },
-    "Beurre de cacahuète / Purée d'amande": { prot: 0.25, glu: 0.15, lip: 0.50, type: "g" },
-    "Chocolat noir >70%": { prot: 0.08, glu: 0.35, lip: 0.40, type: "g" }
+    "Huile d'olive (c.à.s)": { prot: 0.0, glu: 0.0, lip: 10.0, type: "unite", ref: "" },
+    "Beurre": { prot: 0.0, glu: 0.0, lip: 0.80, type: "g", ref: 10 },
+    "Amandes / Noix": { prot: 0.20, glu: 0.10, lip: 0.50, type: "g", ref: 15 },
+    "Avocat (demi)": { prot: 2.0, glu: 5.0, lip: 15.0, type: "unite", ref: "" },
+    "Huile de colza / noix (c.à.s)": { prot: 0.0, glu: 0.0, lip: 10.0, type: "unite", ref: "" },
+    "Beurre de cacahuète / Purée d'amande": { prot: 0.25, glu: 0.15, lip: 0.50, type: "g", ref: 15 },
+    "Chocolat noir >70%": { prot: 0.08, glu: 0.35, lip: 0.40, type: "g", ref: 10 }
   },
   produits_laitiers: {
-    "Yaourt nature": { prot: 5.0, glu: 6.0, lip: 1.5, type: "fixe" },
-    "Fromage blanc (100g)": { prot: 8.0, glu: 4.0, lip: 3.0, type: "fixe" },
-    "Petit-suisse (60g)": { prot: 6.0, glu: 2.0, lip: 2.0, type: "fixe" },
-    "Fromage (30g)": { prot: 7.0, glu: 0.0, lip: 9.0, type: "fixe" },
-    "Skyr (100g)": { prot: 10.0, glu: 4.0, lip: 0.0, type: "fixe" },
-    "Lait 1/2 écrémé (verre)": { prot: 6.0, glu: 9.0, lip: 3.0, type: "fixe" },
-    "Lait d'amande sans sucre (verre)": { prot: 1.0, glu: 0.5, lip: 3.0, type: "fixe" },
-    "Lait de soja (verre)": { prot: 8.0, glu: 2.0, lip: 4.0, type: "fixe" },
-    "Mozzarella / Feta (30g)": { prot: 5.0, glu: 0.5, lip: 6.0, type: "fixe" }
+    "Yaourt nature": { prot: 5.0, glu: 6.0, lip: 1.5, type: "fixe", ref: "" },
+    "Fromage blanc (100g)": { prot: 8.0, glu: 4.0, lip: 3.0, type: "fixe", ref: "" },
+    "Petit-suisse (60g)": { prot: 6.0, glu: 2.0, lip: 2.0, type: "fixe", ref: "" },
+    "Fromage (30g)": { prot: 7.0, glu: 0.0, lip: 9.0, type: "fixe", ref: "" },
+    "Skyr (100g)": { prot: 10.0, glu: 4.0, lip: 0.0, type: "fixe", ref: "" },
+    "Lait 1/2 écrémé (verre)": { prot: 6.0, glu: 9.0, lip: 3.0, type: "fixe", ref: "" },
+    "Lait d'amande sans sucre (verre)": { prot: 1.0, glu: 0.5, lip: 3.0, type: "fixe", ref: "" },
+    "Lait de soja (verre)": { prot: 8.0, glu: 2.0, lip: 4.0, type: "fixe", ref: "" },
+    "Mozzarella / Feta (30g)": { prot: 5.0, glu: 0.5, lip: 6.0, type: "fixe", ref: "" }
   },
   fruits: {
-    "Pomme / Poire / Orange": { prot: 0.0, glu: 15.0, lip: 0.0, type: "fixe" },
-    "Kiwis": { prot: 0.0, glu: 10.0, lip: 0.0, type: "fixe" },
-    "Clémentines / Abricots": { prot: 0.0, glu: 15.0, lip: 0.0, type: "fixe" },
-    "Banane (demi)": { prot: 1.0, glu: 15.0, lip: 0.0, type: "fixe" },
-    "Compote sans sucre (100g)": { prot: 0.0, glu: 12.0, lip: 0.0, type: "fixe" },
-    "Fraises / Fruits rouges (barquette)": { prot: 1.0, glu: 10.0, lip: 0.0, type: "fixe" },
-    "Melon / Ananas (1/4)": { prot: 1.0, glu: 10.0, lip: 0.0, type: "fixe" },
-    "Pêche / Nectarine": { prot: 1.0, glu: 10.0, lip: 0.0, type: "fixe" },
-    "Mangue (1/2)": { prot: 1.0, glu: 15.0, lip: 0.0, type: "fixe" },
-    "Raisin (petite grappe)": { prot: 0.0, glu: 15.0, lip: 0.0, type: "fixe" }
+    "Pomme / Poire / Orange": { prot: 0.0, glu: 15.0, lip: 0.0, type: "fixe", ref: "" },
+    "Kiwis": { prot: 0.0, glu: 10.0, lip: 0.0, type: "fixe", ref: "" },
+    "Clémentines / Abricots": { prot: 0.0, glu: 15.0, lip: 0.0, type: "fixe", ref: "" },
+    "Banane (demi)": { prot: 1.0, glu: 15.0, lip: 0.0, type: "fixe", ref: "" },
+    "Compote sans sucre (100g)": { prot: 0.0, glu: 12.0, lip: 0.0, type: "fixe", ref: "" },
+    "Fraises / Fruits rouges (barquette)": { prot: 1.0, glu: 10.0, lip: 0.0, type: "fixe", ref: "" },
+    "Melon / Ananas (1/4)": { prot: 1.0, glu: 10.0, lip: 0.0, type: "fixe", ref: "" },
+    "Pêche / Nectarine": { prot: 1.0, glu: 10.0, lip: 0.0, type: "fixe", ref: "" },
+    "Mangue (1/2)": { prot: 1.0, glu: 15.0, lip: 0.0, type: "fixe", ref: "" },
+    "Raisin (petite grappe)": { prot: 0.0, glu: 15.0, lip: 0.0, type: "fixe", ref: "" }
   },
   legumes: {
-    "Légumes verts (portion 200g)": { prot: 4.0, glu: 10.0, lip: 1.0, type: "fixe" },
-    "Carottes / Légumes racines (200g)": { prot: 2.0, glu: 16.0, lip: 0.4, type: "fixe" },
-    "Tomates / Légumes d'été (200g)": { prot: 2.0, glu: 8.0, lip: 0.4, type: "fixe" },
-    "Salade (portion 100g)": { prot: 1.0, glu: 2.0, lip: 0.2, type: "fixe" },
-    "Champignons (portion 150g)": { prot: 3.0, glu: 4.5, lip: 0.3, type: "fixe" },
-    "Brocoli / Chou-fleur (200g)": { prot: 6.0, glu: 8.0, lip: 1.0, type: "fixe" }
+    "Légumes verts (portion 200g)": { prot: 4.0, glu: 10.0, lip: 1.0, type: "fixe", ref: "" },
+    "Carottes / Légumes racines (200g)": { prot: 2.0, glu: 16.0, lip: 0.4, type: "fixe", ref: "" },
+    "Tomates / Légumes d'été (200g)": { prot: 2.0, glu: 8.0, lip: 0.4, type: "fixe", ref: "" },
+    "Salade (portion 100g)": { prot: 1.0, glu: 2.0, lip: 0.2, type: "fixe", ref: "" },
+    "Champignons (portion 150g)": { prot: 3.0, glu: 4.5, lip: 0.3, type: "fixe", ref: "" },
+    "Brocoli / Chou-fleur (200g)": { prot: 6.0, glu: 8.0, lip: 1.0, type: "fixe", ref: "" }
   }
 };
 
@@ -100,23 +100,24 @@ function initialiserBaseAliments(ss) {
     return sheetDb;
   }
   
-  sheetDb.getRange("A1:F1").setValues([["Catégorie", "Aliment", "Protéines (g ou %)", "Glucides (g ou %)", "Lipides (g ou %)", "Type"]]).setFontWeight("bold").setBackground("#f3f3f3");
+  sheetDb.getRange("A1:G1").setValues([["Catégorie", "Aliment", "Protéines (g ou %)", "Glucides (g ou %)", "Lipides (g ou %)", "Type", "Portion Réf (g)"]]).setFontWeight("bold").setBackground("#f3f3f3");
   sheetDb.getRange("C1:E1").setNote("Pour le type 'g' (pesée), indiquez la fraction (ex: 0.25 = 25%).\nPour 'unite' ou 'fixe', indiquez la valeur brute par portion.");
+  sheetDb.getRange("G1").setNote("Utilisé uniquement pour le type 'g'.\nPoids de référence d'un 'échange' (ex: 40 pour le pain, 150 pour la pomme de terre, 100 par défaut).");
   
   let rows = [];
   for(let cat in DEFAULT_EQUIVALENCES) {
     for(let nom in DEFAULT_EQUIVALENCES[cat]) {
       let item = DEFAULT_EQUIVALENCES[cat][nom];
-      rows.push([cat, nom, item.prot, item.glu, item.lip, item.type]);
+      rows.push([cat, nom, item.prot, item.glu, item.lip, item.type, item.ref]);
     }
   }
   
-  sheetDb.getRange(2, 1, rows.length, 6).setValues(rows);
+  sheetDb.getRange(2, 1, rows.length, 7).setValues(rows);
   
   const ruleType = SpreadsheetApp.newDataValidation().requireValueInList(["g", "unite", "fixe"], true).build();
   sheetDb.getRange(2, 6, 1000, 1).setDataValidation(ruleType);
   
-  sheetDb.autoResizeColumns(1, 6);
+  sheetDb.autoResizeColumns(1, 7);
   return sheetDb;
 }
 
@@ -137,11 +138,13 @@ function chargerEquivalences() {
     let glu = parseFloat(data[i][3]) || 0;
     let lip = parseFloat(data[i][4]) || 0;
     let type = data[i][5];
+    let refCell = data[i][6];
+    let ref = (refCell !== undefined && refCell !== "") ? parseFloat(refCell) : (type === "g" ? 100 : "");
     
     if (!cat || !nom) continue;
     
     if (!equivalences[cat]) equivalences[cat] = {};
-    equivalences[cat][nom] = { prot: prot, glu: glu, lip: lip, type: type };
+    equivalences[cat][nom] = { prot: prot, glu: glu, lip: lip, type: type, ref: isNaN(ref) ? 100 : ref };
   }
   
   return equivalences;
@@ -441,7 +444,7 @@ function recalculerMenu(editedRange = null) {
   
   // 3. Algorithme de résolution itérative
   let portions = {};
-  dynamicRows.forEach(d => { portions[d.rowObj] = d.item.type === 'g' ? 100 : 1; });
+  dynamicRows.forEach(d => { portions[d.rowObj] = d.item.ref || (d.item.type === 'g' ? 100 : 1); });
   
   for(let iter=0; iter<15; iter++) {
     let sumProt = fixedProt;
