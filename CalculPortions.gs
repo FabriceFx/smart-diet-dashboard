@@ -247,12 +247,10 @@ function rafraichirListesAliments() {
   menuData.forEach((row, i) => {
     const aliment = row[1];
     const cat = getCategoryOfAliment(aliment, equivalences);
-    if (cat && equivalences[cat] && Object.keys(equivalences[cat]).length > 0) {
+    if (cat) {
       const choix = Object.keys(equivalences[cat]);
       const rule = SpreadsheetApp.newDataValidation().requireValueInList(choix, true).build();
       sheet.getRange(startRow + i, 2).setDataValidation(rule);
-    } else if (cat) {
-      sheet.getRange(startRow + i, 2).clearDataValidations();
     } else if (aliment) {
       sheet.getRange(startRow + i, 3).setValue("⚠️ Aliment introuvable");
     }
