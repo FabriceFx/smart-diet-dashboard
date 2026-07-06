@@ -46,6 +46,11 @@ const DEFAULT_EQUIVALENCES = {
     "Compote sans sucre (100g)": { prot: 0.0, glu: 12.0, lip: 0.0, type: "fixe" },
     "Fraises / Fruits rouges (barquette)": { prot: 1.0, glu: 10.0, lip: 0.0, type: "fixe" },
     "Melon / Ananas (1/4)": { prot: 1.0, glu: 10.0, lip: 0.0, type: "fixe" }
+  },
+  legumes: {
+    "Légumes verts (haricots, épinards, courgette...)": { prot: 0.02, glu: 0.05, lip: 0.005, type: "g" },
+    "Carottes / Légumes racines": { prot: 0.01, glu: 0.08, lip: 0.002, type: "g" },
+    "Tomates / Légumes d'été": { prot: 0.01, glu: 0.04, lip: 0.002, type: "g" }
   }
 };
 
@@ -171,7 +176,7 @@ function creerModeleFeuille() {
     ["", "", null],
     ["Déjeuner", "Viande rouge / blanche (maigre)", "viandes"],
     ["", "Pomme de terre", "feculents"],
-    ["", "Légumes crus/cuits", null],
+    ["", "Légumes verts (haricots, épinards, courgette...)", "legumes"],
     ["", "Yaourt nature", "produits_laitiers"],
     ["", "Pomme / Poire / Orange", "fruits"],
     ["", "Huile d'olive (c.à.s)", "matieres_grasses"],
@@ -182,7 +187,7 @@ function creerModeleFeuille() {
     ["", "", null],
     ["Dîner", "Viande rouge / blanche (maigre)", "viandes"],
     ["", "Pomme de terre", "feculents"],
-    ["", "Légumes", null],
+    ["", "Légumes verts (haricots, épinards, courgette...)", "legumes"],
     ["", "Yaourt nature", "produits_laitiers"],
     ["", "Huile d'olive (c.à.s)", "matieres_grasses"]
   ];
