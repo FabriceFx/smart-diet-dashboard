@@ -102,7 +102,7 @@ function initialiserBaseAliments(ss) {
   
   sheetDb.getRange("A1:G1").setValues([["Catégorie", "Aliment", "Protéines (g ou %)", "Glucides (g ou %)", "Lipides (g ou %)", "Type", "Portion Réf (g)"]]).setFontWeight("bold").setBackground("#f3f3f3");
   sheetDb.getRange("C1:E1").setNote("Pour le type 'g' (pesée), indiquez la fraction (ex: 0.25 = 25%).\nPour 'unite' ou 'fixe', indiquez la valeur brute par portion.");
-  sheetDb.getRange("G1").setNote("Utilisé uniquement pour le type 'g'.\nPoids de référence d'un 'échange' (ex: 40 pour le pain, 150 pour la pomme de terre, 100 par défaut).");
+  sheetDb.getRange("G1").setNote("Utilisé uniquement pour le type 'g'.\nPoids de référence d'un 'échange' (ex: 40 pour le pain, 100 pour la pomme de terre, 100 par défaut).");
   
   let rows = [];
   for(let cat in DEFAULT_EQUIVALENCES) {
