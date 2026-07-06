@@ -121,6 +121,7 @@ function creerModeleFeuille() {
     ["Dîner", "Viande rouge / blanche (maigre)", "viandes"],
     ["", "Pomme de terre", "feculents"],
     ["", "Légumes", null],
+    ["", "Yaourt nature", "produits_laitiers"],
     ["", "Huile d'olive (c.à.s)", "matieres_grasses"]
   ];
 
