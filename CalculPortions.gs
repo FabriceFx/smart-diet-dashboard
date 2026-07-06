@@ -64,12 +64,12 @@ const DEFAULT_EQUIVALENCES = {
     "Raisin (petite grappe)": { prot: 0.0, glu: 15.0, lip: 0.0, type: "fixe" }
   },
   legumes: {
-    "Légumes verts (haricots, épinards, courgette...)": { prot: 0.02, glu: 0.05, lip: 0.005, type: "g" },
-    "Carottes / Légumes racines": { prot: 0.01, glu: 0.08, lip: 0.002, type: "g" },
-    "Tomates / Légumes d'été": { prot: 0.01, glu: 0.04, lip: 0.002, type: "g" },
-    "Salade (laitue, mâche, endives)": { prot: 0.01, glu: 0.02, lip: 0.002, type: "g" },
-    "Champignons": { prot: 0.02, glu: 0.03, lip: 0.002, type: "g" },
-    "Brocoli / Chou-fleur": { prot: 0.03, glu: 0.04, lip: 0.005, type: "g" }
+    "Légumes verts (portion 200g)": { prot: 4.0, glu: 10.0, lip: 1.0, type: "fixe" },
+    "Carottes / Légumes racines (200g)": { prot: 2.0, glu: 16.0, lip: 0.4, type: "fixe" },
+    "Tomates / Légumes d'été (200g)": { prot: 2.0, glu: 8.0, lip: 0.4, type: "fixe" },
+    "Salade (portion 100g)": { prot: 1.0, glu: 2.0, lip: 0.2, type: "fixe" },
+    "Champignons (portion 150g)": { prot: 3.0, glu: 4.5, lip: 0.3, type: "fixe" },
+    "Brocoli / Chou-fleur (200g)": { prot: 6.0, glu: 8.0, lip: 1.0, type: "fixe" }
   }
 };
 
@@ -195,7 +195,7 @@ function creerModeleFeuille() {
     ["", "", null],
     ["Déjeuner", "Viande rouge / blanche (maigre)", "viandes"],
     ["", "Pomme de terre", "feculents"],
-    ["", "Légumes verts (haricots, épinards, courgette...)", "legumes"],
+    ["", "Légumes verts (portion 200g)", "legumes"],
     ["", "Yaourt nature", "produits_laitiers"],
     ["", "Pomme / Poire / Orange", "fruits"],
     ["", "Huile d'olive (c.à.s)", "matieres_grasses"],
@@ -206,7 +206,7 @@ function creerModeleFeuille() {
     ["", "", null],
     ["Dîner", "Viande rouge / blanche (maigre)", "viandes"],
     ["", "Pomme de terre", "feculents"],
-    ["", "Légumes verts (haricots, épinards, courgette...)", "legumes"],
+    ["", "Légumes verts (portion 200g)", "legumes"],
     ["", "Yaourt nature", "produits_laitiers"],
     ["", "Huile d'olive (c.à.s)", "matieres_grasses"]
   ];
