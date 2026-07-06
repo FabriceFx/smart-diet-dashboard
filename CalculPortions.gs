@@ -232,7 +232,11 @@ function onEdit(e) {
   const sheet = e.source.getActiveSheet();
   
   if (sheet.getName() === "Dashboard Diététique" && range.getRow() <= 40 && range.getColumn() <= 5) {
-    recalculerMenu();
+    try {
+      recalculerMenu();
+    } catch(err) {
+      e.source.toast("Erreur de calcul : " + err.message, "Alerte Script");
+    }
   }
 }
 
@@ -262,8 +266,18 @@ function recalculerMenu() {
   const targetGlu = (profil.caloriesCibles * (pctGlu/100)) / 4;
   const targetLip = (profil.caloriesCibles * (pctLip/100)) / 9;
   
+  // Rétrocompatibilité : trouver dynamiquement la ligne de départ du menu
+  let startRow = 11;
+  const headerSearch = sheet.getRange("A5:A15").getValues();
+  for(let i=0; i<headerSearch.length; i++) {
+    if (headerSearch[i][0] === "REPAS") {
+      startRow = i + 5 + 1; // +5 pour l'offset, +1 pour la ligne sous l'en-tête
+      break;
+    }
+  }
+  
   // 2. Lire le menu
-  const menuData = sheet.getRange("B11:B40").getValues();
+  const menuData = sheet.getRange(startRow, 2, 35, 1).getValues();
   let fixedProt = 0, fixedGlu = 0, fixedLip = 0;
   let dynamicRows = [];
   
@@ -279,7 +293,7 @@ function recalculerMenu() {
         fixedGlu += item.glu;
         fixedLip += item.lip;
       } else {
-        dynamicRows.push({ rowObj: i+11, cat: cat, item: item });
+        dynamicRows.push({ rowObj: i + startRow, cat: cat, item: item });
       }
     }
   }
@@ -329,7 +343,7 @@ function recalculerMenu() {
     const aliment = menuData[i][0];
     const cat = getCategoryOfAliment(aliment);
     if (cat && EQUIVALENCES[cat] && EQUIVALENCES[cat][aliment] && EQUIVALENCES[cat][aliment].type === "fixe") {
-      sheet.getRange(i+11, 3).setValue("1 portion");
+      sheet.getRange(i + startRow, 3).setValue("1 portion");
     }
   }
 }
