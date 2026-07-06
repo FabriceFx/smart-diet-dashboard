@@ -253,9 +253,13 @@ function rafraichirListesAliments() {
       sheet.getRange(startRow + i, 2).setDataValidation(rule);
     } else if (cat) {
       sheet.getRange(startRow + i, 2).clearDataValidations();
+    } else if (aliment) {
+      sheet.getRange(startRow + i, 3).setValue("⚠️ Aliment introuvable");
     }
   });
-  SpreadsheetApp.getActiveSpreadsheet().toast("Listes d'aliments mises à jour !", "✅ Succès");
+  
+  recalculerMenu();
+  SpreadsheetApp.getActiveSpreadsheet().toast("Listes et quantités mises à jour !", "✅ Succès");
 }
 
 /** Utilitaires sécurisés */
